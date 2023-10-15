@@ -19,17 +19,20 @@ pub fn get_config() -> RcatResult<Config> {
         .arg(
             Arg::with_name("files")
                 .value_name("FILE")
-                .required(true)
-                .min_values(1)
+                .help("Input file(s)")
+                .default_value("-")
         )
         .arg(
             Arg::with_name("number_lines")
                 .short("n")
+                .long("number")
+                .help("Number lines")
                 .takes_value(false)
         )
         .arg(
             Arg::with_name("number_nonblank_lines")
                 .short("b")
+                .help("Number nonblank lines")
                 .takes_value(false)
         )
         .get_matches();
