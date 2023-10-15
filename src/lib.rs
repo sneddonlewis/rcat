@@ -1,4 +1,8 @@
-use std::{error::Error, fs::{self, File}, io::{BufRead, self, BufReader}};
+use std::{
+    error::Error,
+    fs::File,
+    io::{BufRead, self, BufReader},
+};
 
 use clap::{App, Arg};
 
@@ -48,18 +52,33 @@ pub fn get_config() -> RcatResult<Config> {
 }
 
 pub fn run(config: Config) -> RcatResult<()> {
-    // read a file(files) line by line and print to STDIN
-    if config.number_lines {
-        for line in number_lines(read_lines(config.files)) {
-            println!("{}", line);
-        }
-    } else if config.number_nonblank_lines {
-        for line in number_nonblank_lines(read_lines(config.files)) {
-            println!("{}", line);
-        }
-    } else {
-        for line in read_lines(config.files) {
-            println!("{}", line);
+    for filename in &config.files {
+        match open(filename) {
+            Err(err) => eprintln!("Failed to open {}: {}", filename, err),
+            Ok(handle) => {
+                if config.number_lines {
+                    handle
+                        .lines()
+                        .into_iter()
+                        .enumerate()
+                        .for_each(|(idx, l)| println!("{:>6}\t{}", idx + 1, l.unwrap()));
+                } else if config.number_nonblank_lines {
+                    let mut line_number = 0;
+                    for line_result in handle.lines() {
+                        let line = line_result?;
+                        if line.is_empty() {
+                            println!();
+                        } else {
+                            line_number += 1;
+                            println!("{:>6}\t{}", line_number, line);
+                        }
+                    }
+                }else {
+                    handle
+                        .lines()
+                        .for_each(|l| println!("{}", l.unwrap()));
+                }
+            },
         }
     }
 
@@ -73,30 +92,3 @@ fn open(filename: &str) -> RcatResult<Box<dyn BufRead>> {
     }
 }
 
-fn number_nonblank_lines(lines: Vec<String>) -> Vec<String> {
-    lines.iter().enumerate().map(|(idx, line)| {
-        if line.is_empty() {
-            String::from(line)
-        } else {
-            format!("{}\t{}", idx + 1, line)
-        }
-    }).collect()
-}
-
-fn number_lines(lines: Vec<String>) -> Vec<String> {
-    lines.iter().enumerate().map(|(idx, line)| {
-        format!("{}\t{}", idx + 1, line)
-    }).collect()
-}
-
-fn read_lines(files: Vec<String>) -> Vec<String> {
-    let mut result = Vec::new();
-
-    for file in &files {
-        for line in fs::read_to_string(file).unwrap().lines() {
-            result.push(String::from(line));
-        }
-    }
-
-    result
-}
