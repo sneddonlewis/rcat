@@ -62,7 +62,10 @@ pub fn run(config: Config) -> RcatResult<()> {
                         .into_iter()
                         .enumerate()
                         .for_each(|(idx, l)| println!("{:>6}\t{}", idx + 1, l.unwrap()));
-                } else if config.number_nonblank_lines {
+                    continue;
+                } 
+
+                if config.number_nonblank_lines {
                     let mut line_number = 0;
                     for line_result in handle.lines() {
                         let line = line_result?;
@@ -73,11 +76,12 @@ pub fn run(config: Config) -> RcatResult<()> {
                             println!("{:>6}\t{}", line_number, line);
                         }
                     }
-                }else {
-                    handle
-                        .lines()
-                        .for_each(|l| println!("{}", l.unwrap()));
+                    continue;
                 }
+
+                handle
+                    .lines()
+                    .for_each(|l| println!("{}", l.unwrap()));
             },
         }
     }
